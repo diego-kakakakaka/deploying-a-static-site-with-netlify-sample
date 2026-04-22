@@ -1,20 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="style.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap" rel="stylesheet">
-  <script src="script.js" defer></script>
-  <title>Your Website</title>
+  <title>Plataforma IA Petrobras</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#f4f4f4;--card:#fff;--text:#000;--primary:#008542;--secondary:#ffc72c;
+    }
+    body.dark{
+      --bg:#1e1e1e;--card:#2c2c2c;--text:#fff;
+    }
+    body { font-family: Arial; margin: 0; background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+    header h1{margin:0}
+    .container { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    input, textarea, select { width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px; border: 1px solid #ccc; }
+    button { margin-top: 10px; padding: 10px; background: var(--secondary); color: black; border: none; border-radius: 8px; cursor: pointer; font-weight:bold; }
+    ul { list-style: none; padding: 0; }
+    li { background: #f4f4f4; margin-top: 10px; padding: 10px; border-radius: 8px; }
+    body.dark li{background:#3a3a3a}
+    .full { grid-column: span 2; }
+  </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>Welcome to your website!</h1>
-    <button id="clap-button" class="button">👏</button>
-  </div>
-</body>
 
+<header>
+  <h1>🟢 Plataforma Inteligente Petrobras</h1>
+  <p>IA de Acessibilidade - PT API</p>
+  <button onclick="toggleDark()">🌙 Tema</button>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>🔐 Login</h2>
+    <input id="loginNome" placeholder="Nome">
+    <button onclick="login()">Entrar</button>
+    <p id="user"></p>
+  </div>
+
+  <div class="card">
+    <h2>📥 Nova Solicitação</h2>
+    <input type="text" id="nome" placeholder="Seu nome">
+    <select id="tipo">
+      <option value="">Tipo de necessidade</option>
+      <option>Arquitetônica</option>
+      <option>Tecnológica</option>
+      <option>Comunicacional</option>
+      <option>Atitudinal</option>
+    </select>
+    <textarea id="descricao" placeholder="Descreva sua necessidade"></textarea>
+    <button onclick="enviar()">Enviar</button>
+    <button onclick="falar()">🎤 Falar</button>
+  </div>
+
+  <div class="card">
+    <h2>🤖 PT API (IA)</h2>
+    <p id="iaResposta">Aguardando análise...</p>
+  </div>
+
+  <div class="card full">
+    <h2>📊 Dashboard</h2>
+    <canvas id="grafico"></canvas>
+  </div>
+
+  <div class="card full">
+    <h2>📋 Solicitações</h2>
+    <ul id="lista"></ul>
+  </div>
+
+</div>
+
+<script>
+let dados = {Arquitetônica:0,Tecnológica:0,Comunicacional:0,Atitudinal:0};
+let usuario="";
+
+const ctx = document.getElementById('grafico').getContext('2d');
+const grafico = new Chart(ctx, {
+  type: 'bar',
+  data: { labels: Object.keys(dados), datasets: [{ label: 'Demandas', data: Object.values(dados) }] }
+});
+
+function login(){
+  usuario = document.getElementById('loginNome').value;
+  document.getElementById('user').innerText = "Logado como: " + usuario;
+}
+
+async function enviar() {
+  const nome = usuario || document.getElementById('nome').value;
+  const tipo = document.getElementById('tipo').value;
+  const descricao = document.getElementById('descricao').value;
+
+  if (!nome || !tipo || !descricao) return alert('Preencha tudo!');
+
+  dados[tipo]++;
+  grafico.data.datasets[0].data = Object.values(dados);
+  grafico.update();
+
+  let respostaIA = await chamarIA(tipo, descricao);
+
+  document.getElementById('iaResposta').innerText = respostaIA;
+  falarTexto(respostaIA);
+
+  const item = document.createElement('li');
+  item.innerHTML = `<strong>${nome}</strong> - ${tipo}<br>${descricao}`;
+  document.getElementById('lista').appendChild(item);
+}
+
+async function chamarIA(tipo, descricao){
+  return `PT API: Detectamos uma demanda ${tipo}. Recomendamos ação imediata e encaminhamento ao setor responsável. Descrição analisada: ${descricao}`;
+}
+
+function toggleDark(){ document.body.classList.toggle('dark'); }
+
+function falarTexto(texto){
+  const msg = new SpeechSynthesisUtterance(texto);
+  speechSynthesis.speak(msg);
+}
+
+function falar(){
+  const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.lang='pt-BR';
+  rec.start();
+  rec.onresult = e => document.getElementById('descricao').value = e.results[0][0].transcript;
+}
+</script>
+
+</body>
 </html>
